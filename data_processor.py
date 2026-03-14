@@ -10,39 +10,32 @@ from analyser import analyse, combined_rating, combined_label
 _LEARNED_LEXICON_PATH = os.path.join(os.path.dirname(__file__), "learned_lexicon.json")
 
 def _update_learned_lexicon(keywords: list[str], data: list) -> None:
-    """Infer polarity of each keyword using the trained financial ML model.
+    """Infer polarity of each keyword from all collected items.
 
-    For each keyword, score every sentence that contains it with the
-    TF-IDF/LR model (trained on Financial PhraseBank).  Average those scores
-    to decide polarity:
-        avg > +0.4  → positive entry
-        avg < -0.4  → negative entry
+    Scores every item (news via ML blend, reviews via star rating + VADER)
+    then averages scores for items containing each keyword:
+        avg > +0.2  → positive entry
+        avg < -0.2  → negative entry
         otherwise   → skipped (ambiguous)
 
-    Requires at least 2 sentences per keyword to avoid noise.
+    Requires at least 2 items per keyword.
     Hard-coded lexicon words are never overwritten.
     """
-    from analyser import _ml_score
     from custom_analyser import POSITIVE_WORDS, NEGATIVE_WORDS
 
     hardcoded = set(POSITIVE_WORDS) | set(NEGATIVE_WORDS)
 
-    # Only score news items — financial ML model trained on news, not reviews
-    word_ml: dict[str, list[float]] = defaultdict(list)
+    # Score every item using _analyse_item so reviews (star rating + VADER)
+    # and news (ML blend) are both included
+    word_scores: dict[str, list[float]] = defaultdict(list)
     for item in data:
-        if item.get("source") not in ("newsapi", "news_review"):
+        score = _analyse_item(item)
+        if score is None:
             continue
-        text = f"{item.get('title', '')} {item.get('body', '')}"
-        if not text.strip():
-            continue
-        for sentence in re.split(r'[.!?\n]+', text):
-            sentence = sentence.strip()
-            if len(sentence.split()) < 4:
-                continue
-            score = _ml_score(sentence)
-            for kw in keywords:
-                if kw in sentence.lower():
-                    word_ml[kw].append(score)
+        text = f"{item.get('title', '')} {item.get('body', '')}".lower()
+        for kw in keywords:
+            if kw in text:
+                word_scores[kw].append(score)
 
     if os.path.exists(_LEARNED_LEXICON_PATH):
         with open(_LEARNED_LEXICON_PATH) as f:
@@ -51,18 +44,21 @@ def _update_learned_lexicon(keywords: list[str], data: list) -> None:
         learned = {"positive": {}, "negative": {}}
 
     updated = []
-    for kw, scores in word_ml.items():
-        if kw in hardcoded or len(scores) < 2:
+    for kw in keywords:
+        if kw in hardcoded:
+            continue
+        scores = word_scores.get(kw, [])
+        if len(scores) < 2:
             continue
         avg = sum(scores) / len(scores)
-        if avg > 0.4:
+        if avg > 0.2:
             learned["positive"][kw] = round(min(avg, 0.8), 2)
             learned["negative"].pop(kw, None)
-            updated.append(f"+{kw}({avg:+.2f})")
-        elif avg < -0.4:
+            updated.append(f"+{kw}")
+        elif avg < -0.2:
             learned["negative"][kw] = round(min(abs(avg), 0.8), 2)
             learned["positive"].pop(kw, None)
-            updated.append(f"-{kw}({avg:+.2f})")
+            updated.append(f"-{kw}")
 
     with open(_LEARNED_LEXICON_PATH, "w") as f:
         json.dump(learned, f, indent=2)

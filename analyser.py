@@ -1,4 +1,5 @@
 import os
+import re
 import joblib
 from custom_analyser import custom_score
 
@@ -36,14 +37,33 @@ def _ml_score(text: str) -> float:
 
     Returns a -1 to +1 score derived from class probabilities:
         score = P(positive) - P(negative)
-    Falls back to VADER+lexicon if model is not loaded.
     """
     if _model is None:
         return custom_score(text)
 
-    # predict probs returns [P(negative), P(neutral), P(positive)]
-    probs = _model.predict_proba([text])[0]
-    return float(probs[2] - probs[0])
+    words = text.split()
+    if len(words) <= 40:
+        # Short enough — score directly as trained
+        probs = _model.predict_proba([text])[0]
+        return float(probs[2] - probs[0])
+
+    # Long article: score sentence by sentence
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if len(s.split()) >= 4]
+    if not sentences:
+        probs = _model.predict_proba([text])[0]
+        return float(probs[2] - probs[0])
+
+    scores = []
+    for sent in sentences:
+        probs = _model.predict_proba([sent])[0]
+        scores.append(float(probs[2] - probs[0]))
+
+    # Use only sentences with meaningful signal to avoid neutral filler diluting the result
+    strong = [s for s in scores if abs(s) > 0.15]
+    if strong:
+        return sum(strong) / len(strong)
+    # All sentences are neutral — return the overall mean
+    return sum(scores) / len(scores)
 
 def analyse(text: str, use_ml: bool = True):
     """Run sentiment analysis and return a result tuple.
