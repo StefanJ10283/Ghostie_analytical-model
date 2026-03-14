@@ -5,7 +5,7 @@ from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from data_processor import analyse_business
 
-DATA_RETRIEVAL_URL = os.environ.get("DATA_RETRIEVAL_URL", "http://localhost:8001")
+DATA_RETRIEVAL_URL = os.environ.get("DATA_RETRIEVAL_URL", "https://8dwmeuc3b1.execute-api.ap-southeast-2.amazonaws.com/Prod")
 
 app = FastAPI(
     title="Ghostie Analytical Model API",
