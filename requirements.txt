@@ -4,3 +4,4 @@ sentencepiece
 nltk
 fastapi
 uvicorn
+mangum
