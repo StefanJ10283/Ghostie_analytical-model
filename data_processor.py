@@ -35,7 +35,7 @@ def _update_learned_lexicon(keywords: list[str], data: list) -> None:
         score = _analyse_item(item)
         if score is None:
             continue
-        text = f"{item.get('title', '')} {item.get('body', '')}".lower()
+        text = f"{item.get('title', '')} {item.get('body') or item.get('review', '')}".lower()
         for kw in keywords:
             if kw in text:
                 word_scores[kw].append(score)
@@ -96,7 +96,7 @@ def extract_keywords(data: list, top_n: int = 5,
         if item.get("source") == "newsapi":
             text = f"{item.get('title', '')} {item.get('body', '')}"
         else:
-            text = item.get("body", "") or ""
+            text = item.get("body") or item.get("review") or ""
 
         if not text.strip():
             continue
@@ -125,10 +125,19 @@ def _analyse_item(item: dict) -> float | None:
     """
     source = item.get("source", "")
     title  = item.get("title", "") or ""
-    body   = item.get("body", "") or ""
+    # Support both "body" and "review" field names
+    body   = item.get("body") or item.get("review") or ""
 
-    if source == "google_maps_reviews":
-        star_score = _star_to_score(item.get("metadata", {}).get("rating"))
+    # Support both "metadata.rating" and top-level "rating"
+    raw_rating = item.get("metadata", {}).get("rating") if item.get("metadata") else None
+    if raw_rating is None:
+        raw_rating = item.get("rating")
+
+    # Treat as review if source says so, or if there's a rating and no news title
+    is_review = source == "google_maps_reviews" or (raw_rating is not None and not title)
+
+    if is_review:
+        star_score = _star_to_score(raw_rating)
 
         if body.strip():
             # Reviews use VADER+lexicon only (financial model trained on news, not reviews)
@@ -175,8 +184,8 @@ def analyse_business(business_name: str, location: str, category: str, data: lis
             "id":        item.get("id", ""),
             "source":    item.get("source", ""),
             "title":     item.get("title", ""),
-            "body":      (item.get("body") or "")[:200],
-            "rating":    item.get("metadata", {}).get("rating"),
+            "body":      (item.get("body") or item.get("review") or "")[:200],
+            "rating":    (item.get("metadata", {}).get("rating") if item.get("metadata") else None) or item.get("rating"),
             "sentiment": combined_label(score),
             "score":     round(score, 3),
         })
