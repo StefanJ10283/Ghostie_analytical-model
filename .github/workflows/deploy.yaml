@@ -22,6 +22,15 @@ jobs:
 
       - uses: aws-actions/setup-sam@v2
 
+      - name: Delete stack if in ROLLBACK_COMPLETE
+        run: |
+          STATUS=$(aws cloudformation describe-stacks --stack-name Ghostie-analytical-model --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "DOES_NOT_EXIST")
+          if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
+            echo "Stack in ROLLBACK_COMPLETE — deleting..."
+            aws cloudformation delete-stack --stack-name Ghostie-analytical-model
+            aws cloudformation wait stack-delete-complete --stack-name Ghostie-analytical-model
+          fi
+
       - run: sam build
 
       - run: sam deploy --stack-name Ghostie-analytical-model --resolve-s3 --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset
