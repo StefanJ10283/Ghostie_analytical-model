@@ -1,4 +1,6 @@
 import re
+import json
+import os
 import math
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -38,10 +40,13 @@ NEGATIVE_WORDS = {
     "fall": 0.7, "fell": 0.7, "drop": 0.8, "dropped": 0.8,
     "recession": 1.0, "crisis": 1.0, "risk": 0.6, "risks": 0.6,
     "debt": 0.7, "default": 1.0, "bankrupt": 1.0, "bankruptcy": 1.0,
-    "miss": 0.8, "missed": 0.8, "weak": 0.8, "weakness": 0.8,
+    "miss": 0.8, "missed": 0.8, "misses": 0.8, "missing": 0.7,
+    "weak": 0.8, "weakness": 0.8,
     "poor": 0.8, "concern": 0.6, "concerns": 0.6, "uncertainty": 0.7,
     "volatile": 0.7, "volatility": 0.7, "downgrade": 1.0, "downgraded": 1.0,
-    "penalty": 0.9, "penalties": 0.9, "fine": 0.7, "lawsuit": 0.9,
+    "penalty": 0.9, "penalties": 0.9, "fine": 0.7,
+    "lawsuit": 0.9, "lawsuits": 0.9, "litigation": 0.9,
+    "court": 0.6, "courts": 0.6, "injunction": 0.9, "ruling": 0.6,
     "fraud": 1.0, "layoff": 1.0, "layoffs": 1.0, "cut": 0.6, "cuts": 0.6,
     "reduce": 0.5, "reduced": 0.5, "deficit": 1.0, "burden": 0.8,
     "constraint": 0.7, "constraints": 0.7, "concentrated": 0.5,
@@ -53,11 +58,27 @@ NEGATIVE_WORDS = {
     "deteriorate": 1.0, "deteriorating": 1.0, "worsen": 0.9, "worsening": 0.9,
     "damage": 0.9, "harm": 0.8, "harmful": 0.8, "negative": 0.7,
     "pressure": 0.6, "pressures": 0.6, "challenge": 0.5, "challenges": 0.5,
-    "headwind": 0.8, "headwinds": 0.8, "underperform": 1.0,
+    "headwind": 0.8, "headwinds": 0.8, "underperform": 1.0, "underperforms": 1.0,
     "slump": 0.9, "slumped": 0.9, "shrink": 0.8, "shrinking": 0.8,
     "contract": 0.7, "contracting": 0.7, "fragile": 0.8,
     "vulnerability": 0.8, "vulnerable": 0.8, "costly": 0.7, "overvalued": 0.9,
+    "dive": 0.9, "dived": 0.9, "dives": 0.9,
+    "misleading": 1.0, "illusory": 1.0, "deceptive": 1.0, "accused": 0.8,
+    "antitrust": 0.9, "accc": 0.7, "regulator": 0.6, "probe": 0.7,
+    "outage": 0.9, "outages": 0.9, "incident": 0.6, "incidents": 0.6,
+    "settle": 0.6, "settlement": 0.7, "penalty": 0.9, "sue": 0.9, "sued": 0.9,
 }
+
+# --- Learned Lexicon (auto-updated from real data) ---
+_LEARNED_PATH = os.path.join(os.path.dirname(__file__), "learned_lexicon.json")
+if os.path.exists(_LEARNED_PATH):
+    with open(_LEARNED_PATH) as _f:
+        _learned = json.load(_f)
+    # Learned words do not override hard-coded ones
+    for _w, _v in _learned.get("positive", {}).items():
+        POSITIVE_WORDS.setdefault(_w, _v)
+    for _w, _v in _learned.get("negative", {}).items():
+        NEGATIVE_WORDS.setdefault(_w, _v)
 
 # --- Rule-based Phrases ---
 

@@ -1,28 +1,99 @@
 import re
-from collections import Counter
-from datetime import datetime, timedelta, timezone
+import json
+import os
+from collections import Counter, defaultdict
 import nltk
 nltk.download('stopwords', quiet=True)
 from nltk.corpus import stopwords
 from analyser import analyse, combined_rating, combined_label
 
-_STOP_WORDS = set(stopwords.words('english'))
+_LEARNED_LEXICON_PATH = os.path.join(os.path.dirname(__file__), "learned_lexicon.json")
 
-def extract_keywords(data: list, top_n: int = 5, days: int = 7) -> list[str]:
-    """Return the top N most frequent non-stop words from the last `days` days."""
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+def _update_learned_lexicon(keywords: list[str], data: list) -> None:
+    """Infer polarity of each keyword using the trained financial ML model.
+
+    For each keyword, score every sentence that contains it with the
+    TF-IDF/LR model (trained on Financial PhraseBank).  Average those scores
+    to decide polarity:
+        avg > +0.4  → positive entry
+        avg < -0.4  → negative entry
+        otherwise   → skipped (ambiguous)
+
+    Requires at least 2 sentences per keyword to avoid noise.
+    Hard-coded lexicon words are never overwritten.
+    """
+    from analyser import _ml_score
+    from custom_analyser import POSITIVE_WORDS, NEGATIVE_WORDS
+
+    hardcoded = set(POSITIVE_WORDS) | set(NEGATIVE_WORDS)
+
+    # Only score news items — financial ML model trained on news, not reviews
+    word_ml: dict[str, list[float]] = defaultdict(list)
+    for item in data:
+        if item.get("source") not in ("newsapi", "news_review"):
+            continue
+        text = f"{item.get('title', '')} {item.get('body', '')}"
+        if not text.strip():
+            continue
+        for sentence in re.split(r'[.!?\n]+', text):
+            sentence = sentence.strip()
+            if len(sentence.split()) < 4:
+                continue
+            score = _ml_score(sentence)
+            for kw in keywords:
+                if kw in sentence.lower():
+                    word_ml[kw].append(score)
+
+    if os.path.exists(_LEARNED_LEXICON_PATH):
+        with open(_LEARNED_LEXICON_PATH) as f:
+            learned = json.load(f)
+    else:
+        learned = {"positive": {}, "negative": {}}
+
+    updated = []
+    for kw, scores in word_ml.items():
+        if kw in hardcoded or len(scores) < 2:
+            continue
+        avg = sum(scores) / len(scores)
+        if avg > 0.4:
+            learned["positive"][kw] = round(min(avg, 0.8), 2)
+            learned["negative"].pop(kw, None)
+            updated.append(f"+{kw}({avg:+.2f})")
+        elif avg < -0.4:
+            learned["negative"][kw] = round(min(abs(avg), 0.8), 2)
+            learned["positive"].pop(kw, None)
+            updated.append(f"-{kw}({avg:+.2f})")
+
+    with open(_LEARNED_LEXICON_PATH, "w") as f:
+        json.dump(learned, f, indent=2)
+    if updated:
+        print(f"Learned lexicon updated: {', '.join(updated)}")
+
+_STOP_WORDS = set(stopwords.words('english')) | {
+    "card", "cards", "gift", "swap", "brand", "brands", "option", "options",
+    "also", "one", "two", "three", "may", "get", "use", "via", "per",
+    "including", "available", "new", "like", "says", "said", "will", "year",
+    "years", "month", "months", "week", "ago", "day", "days", "time",
+    "company", "companies", "market", "report", "business", "product", "products",
+}
+
+def extract_keywords(data: list, top_n: int = 5,
+                     business_name: str = "", location: str = "", category: str = "") -> list[str]:
+    """Return the top N keywords by document frequency across all collected items.
+
+    Uses document frequency (max 1 count per article) so a single repetitive
+    article cannot dominate the results.
+    """
+    # Build query-specific stop words so the business name, location, and
+    # category don't dominate the keyword list (e.g. "sydney", "commbank")
+    query_words = set()
+    for phrase in (business_name, location, category):
+        query_words.update(re.findall(r'\b[a-z]{3,}\b', phrase.lower()))
+    stop = _STOP_WORDS | query_words
+
     counts = Counter()
 
     for item in data:
-        ts = item.get("timestamp")
-        if ts:
-            try:
-                item_time = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                if item_time < cutoff:
-                    continue
-            except ValueError:
-                pass
-
         if item.get("source") == "newsapi":
             text = f"{item.get('title', '')} {item.get('body', '')}"
         else:
@@ -31,8 +102,9 @@ def extract_keywords(data: list, top_n: int = 5, days: int = 7) -> list[str]:
         if not text.strip():
             continue
 
-        words = re.findall(r'\b[a-z]{3,}\b', text.lower())
-        counts.update(w for w in words if w not in _STOP_WORDS)
+        # Use a set so each word counts once per article (document frequency)
+        words = set(re.findall(r'\b[a-z]{3,}\b', text.lower()))
+        counts.update(w for w in words if w not in stop)
 
     return [word for word, _ in counts.most_common(top_n)]
 
@@ -60,8 +132,8 @@ def _analyse_item(item: dict) -> float | None:
         star_score = _star_to_score(item.get("metadata", {}).get("rating"))
 
         if body.strip():
-            # Blend ML score (60%) with star rating (40%)
-            _, _, _, ml_score, _, _ = analyse(body)
+            # Reviews use VADER+lexicon only (financial model trained on news, not reviews)
+            _, _, _, ml_score, _, _ = analyse(body, use_ml=False)
             if star_score is not None:
                 return ml_score * 0.6 + star_score * 0.4
             return ml_score
@@ -119,11 +191,14 @@ def analyse_business(business_name: str, location: str, category: str, data: lis
             "overall_rating":    3,
             "overall_score":     0.0,
             "items_analysed":    0,
-            "keywords":          extract_keywords(data),
+            "keywords":          extract_keywords(data, business_name=business_name, location=location, category=category),
             "breakdown":         [],
         }
 
     overall_score = sum(r["score"] for r in results) / len(results)
+
+    keywords = extract_keywords(data, business_name=business_name, location=location, category=category)
+    _update_learned_lexicon(keywords, data)
 
     return {
         "business_name":     business_name,
@@ -133,6 +208,6 @@ def analyse_business(business_name: str, location: str, category: str, data: lis
         "overall_rating":    combined_rating(overall_score),
         "overall_score":     round(overall_score, 3),
         "items_analysed":    len(results),
-        "keywords":          extract_keywords(data),
+        "keywords":          keywords,
         "breakdown":         results,
     }

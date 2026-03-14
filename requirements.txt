@@ -1,7 +1,5 @@
-transformers
-torch
-sentencepiece
 nltk
+scikit-learn
 fastapi
 uvicorn
 mangum

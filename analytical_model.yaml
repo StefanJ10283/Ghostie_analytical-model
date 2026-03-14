@@ -4,12 +4,12 @@ info:
   version: 1.0.0
   description: |
     Sentiment analysis microservice for the Ghostie platform. Fetches business data
-    from the data retrieval server, runs FinBERT + VADER-based sentiment analysis,
-    and returns aggregated results with per-item breakdowns.
+    from the data retrieval server, runs TF-IDF/Logistic Regression + VADER-based
+    sentiment analysis, and returns aggregated results with per-item breakdowns.
 
     **Scoring methodology:**
-    - FinBERT (30%) + Custom Lexicon/VADER (70%) for news articles
-    - For reviews with text: ML score (60%) + star rating (40%)
+    - TF-IDF + Logistic Regression (30%) + Custom Lexicon/VADER (70%) for news articles
+    - For reviews with text: VADER+lexicon score (60%) + star rating (40%)
     - For reviews without text: star rating only
 
 servers:
@@ -59,8 +59,8 @@ paths:
         Fetches the latest data for a business from the data retrieval server, runs
         sentiment analysis, and returns an aggregated result with a per-item breakdown.
 
-        Returns cached results (with status `NO NEW DATA (cached)`) if the underlying
-        data has not changed since the last analysis.
+        Status is `NEW DATA` when data has changed since the last retrieval, or
+        `ANALYSED` when re-analysed from the same dataset.
       operationId: getSentiment
       parameters:
         - name: business_name
@@ -105,9 +105,9 @@ paths:
                     items_analysed: 12
                     hash_key: a3f9c2e1b8d74056
                     keywords:
-                      - great atmosphere
-                      - slow service
-                      - craft beer
+                      - atmosphere
+                      - service
+                      - craft
                     breakdown:
                       - id: abc123
                         source: google_maps_reviews
@@ -117,9 +117,9 @@ paths:
                         sentiment: positive
                         score: 0.78
                 cached_data:
-                  summary: Cached result (no new data)
+                  summary: Re-analysed from existing data
                   value:
-                    status: NO NEW DATA (cached)
+                    status: ANALYSED
                     business_name: The Rocks Brewery
                     location: Sydney
                     category: restaurant
@@ -129,8 +129,8 @@ paths:
                     items_analysed: 12
                     hash_key: a3f9c2e1b8d74056
                     keywords:
-                      - great atmosphere
-                      - slow service
+                      - atmosphere
+                      - service
                     breakdown:
                       - id: abc123
                         source: google_maps_reviews
@@ -193,8 +193,8 @@ components:
           type: string
           enum:
             - NEW DATA
-            - NO NEW DATA (cached)
-          description: Indicates whether the result contains freshly analysed data or a cached result.
+            - ANALYSED
+          description: Indicates whether the result was analysed from newly collected data or re-analysed from existing data.
         business_name:
           type: string
         location:
@@ -232,10 +232,10 @@ components:
           type: array
           items:
             type: string
-          description: Key phrases extracted from the analysed content.
+          description: Top keywords by frequency extracted from the analysed content
         breakdown:
           type: array
-          description: Per-item sentiment analysis results. Always present (loaded from cache for `NO NEW DATA (cached)` responses).
+          description: Per-item sentiment analysis results.
           items:
             type: object
             required:
