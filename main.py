@@ -59,7 +59,8 @@ def retrieve(
     current_hash = retrieval.get("hash_key")
 
     # If no new data, fetch by hash to get the actual items
-    if retrieval.get("status") == "NO NEW DATA":
+    is_cached = retrieval.get("status") == "NO NEW DATA"
+    if is_cached:
         try:
             retrieval = httpx.get(
                 f"{DATA_RETRIEVAL_URL}/retrieve/{current_hash}",
@@ -74,9 +75,6 @@ def retrieve(
         category=category,
         data=retrieval.get("data", []),
     )
-
-    result["status"]   = "NEW DATA" if retrieval.get("status") != "NO NEW DATA" else "ANALYSED"
-    result["hash_key"] = current_hash
 
     return JSONResponse(content=result)
 
