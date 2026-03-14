@@ -9,7 +9,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 try:
     nltk.data.find("sentiment/vader_lexicon.zip")
 except LookupError:
-    nltk.download("vader_lexicon", quiet=True)
+    nltk.download("vader_lexicon", download_dir='/tmp/nltk_data', quiet=True)
 
 _vader = SentimentIntensityAnalyzer()
 

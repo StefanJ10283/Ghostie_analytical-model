@@ -3,7 +3,10 @@ import json
 import os
 from collections import Counter, defaultdict
 import nltk
-nltk.download('stopwords', quiet=True)
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', download_dir='/tmp/nltk_data', quiet=True)
 from nltk.corpus import stopwords
 from analyser import analyse, combined_rating, combined_label
 
