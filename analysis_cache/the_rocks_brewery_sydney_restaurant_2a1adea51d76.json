@@ -1,0 +1,86 @@
+{
+  "business_name": "The Rocks Brewery",
+  "location": "Sydney",
+  "category": "restaurant",
+  "overall_sentiment": "positive",
+  "overall_rating": 5,
+  "overall_score": 0.775,
+  "items_analysed": 8,
+  "keywords": [],
+  "breakdown": [
+    {
+      "id": "gmaps_5030684466246544934",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Met my expectations in beer selections quality and food. This time I tried East coast IPA citrusy, fruity and freshing. Intensive food menu bit overpriced, don\u2019t let the plates presentation fool you, ",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.315
+    },
+    {
+      "id": "gmaps_3720966815187562703",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Andre is an amazing host, made our group very welcome. Food is amazing, and the atmosphere was rockin",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.777
+    },
+    {
+      "id": "gmaps_6542238152285632127",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "I have visited when nobody was there on Monday lol. Very huge place but nothing around.\nWe asked for the recommendation and the charming staff recommended summer ale and let us to try some. It would b",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.791
+    },
+    {
+      "id": "gmaps_5047801823534484112",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Amazing beers & ciders!\n\nWe\u2019ve had a lot of chilli prawn spaghetti in our time but theirs beats them all hands down!\n\nGreat service too!\n\nKeep it up team \ud83d\ude00",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.767
+    },
+    {
+      "id": "gmaps_6281740290846505322",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "10/10 place!\n\nWe are English and would say this is the best roast in Sydney we have found - all the trimmings and extras!\n\nThe venue is great, dog friendly, and all the staff are super friendly and he",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.812
+    },
+    {
+      "id": "gmaps_4685699316855959359",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Such a lovely experience my boyfriend and I had! The staff were so polite and understanding about my allergy to seasme. I wanted to get the cheeseburger however they told me it had seasme seeds, they ",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.805
+    },
+    {
+      "id": "gmaps_9043288155785256997",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Great food, excellent staff. Beer is superb. And very dog friendly",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.978
+    },
+    {
+      "id": "gmaps_8988080285450422974",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "came in today at around 8:25, and received some of the best hospitality by (apologies as i didn\u2019t get their names) a female working behind the bar and a male with her as well! They helped me out with ",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.957
+    }
+  ],
+  "status": "NEW DATA",
+  "hash_key": "2a1adea51d7689ba99e842405112d07c7d474556cf2a55aa7f4a266ee0bbbb1c"
+}

@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: Ghostie Analytical Model API
+  version: 1.0.0
+  description: |
+    Sentiment analysis microservice for the Ghostie platform. Fetches business data
+    from the data retrieval server, runs FinBERT + VADER-based sentiment analysis,
+    and returns aggregated results with per-item breakdowns.
+
+    **Scoring methodology:**
+    - FinBERT (30%) + Custom Lexicon/VADER (70%) for news articles
+    - For reviews with text: ML score (60%) + star rating (40%)
+    - For reviews without text: star rating only
+
+servers:
+  - url: http://localhost:8002
+    description: Local development server
+
+paths:
+  /:
+    get:
+      summary: Service info
+      description: Returns basic information about the service and available endpoints.
+      operationId: getRoot
+      responses:
+        "200":
+          description: Service information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceInfo"
+              example:
+                service: Ghostie Analytical Model API
+                version: 1.0.0
+                status: running
+                endpoints:
+                  GET /sentiment: Fetch & analyse business data from the data retrieval server
+                  GET /health: Health check
+
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the service.
+      operationId: getHealth
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: healthy
+
+  /sentiment:
+    get:
+      summary: Analyse business sentiment
+      description: |
+        Fetches the latest data for a business from the data retrieval server, runs
+        sentiment analysis, and returns an aggregated result with a per-item breakdown.
+
+        Returns cached results (with status `NO NEW DATA (cached)`) if the underlying
+        data has not changed since the last analysis.
+      operationId: getSentiment
+      parameters:
+        - name: business_name
+          in: query
+          required: true
+          description: Name of the business to analyse.
+          schema:
+            type: string
+          example: The Rocks Brewery
+        - name: location
+          in: query
+          required: true
+          description: Location of the business.
+          schema:
+            type: string
+          example: Sydney
+        - name: category
+          in: query
+          required: true
+          description: Business category or industry.
+          schema:
+            type: string
+          example: restaurant
+      responses:
+        "200":
+          description: Sentiment analysis result (new data or cached)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SentimentResponse"
+              examples:
+                new_data:
+                  summary: New analysis result
+                  value:
+                    status: NEW DATA
+                    business_name: The Rocks Brewery
+                    location: Sydney
+                    category: restaurant
+                    overall_sentiment: positive
+                    overall_rating: 4
+                    overall_score: 0.42
+                    items_analysed: 12
+                    hash_key: a3f9c2e1b8d74056
+                    keywords:
+                      - great atmosphere
+                      - slow service
+                      - craft beer
+                    breakdown:
+                      - id: abc123
+                        source: google_maps_reviews
+                        title: ""
+                        body: Really enjoyed the craft beers here. Atmosphere is great!
+                        rating: 5
+                        sentiment: positive
+                        score: 0.78
+                cached_data:
+                  summary: Cached result (no new data)
+                  value:
+                    status: NO NEW DATA (cached)
+                    business_name: The Rocks Brewery
+                    location: Sydney
+                    category: restaurant
+                    overall_sentiment: positive
+                    overall_rating: 4
+                    overall_score: 0.42
+                    items_analysed: 12
+                    hash_key: a3f9c2e1b8d74056
+                    keywords:
+                      - great atmosphere
+                      - slow service
+                    breakdown:
+                      - id: abc123
+                        source: google_maps_reviews
+                        title: ""
+                        body: Really enjoyed the craft beers here. Atmosphere is great!
+                        rating: 5
+                        sentiment: positive
+                        score: 0.78
+        "503":
+          description: Data retrieval server is unreachable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                detail: Data retrieval server is unreachable
+
+components:
+  schemas:
+    ServiceInfo:
+      type: object
+      properties:
+        service:
+          type: string
+          example: Ghostie Analytical Model API
+        version:
+          type: string
+          example: 1.0.0
+        status:
+          type: string
+          example: running
+        endpoints:
+          type: object
+          additionalProperties:
+            type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: healthy
+
+    SentimentResponse:
+      type: object
+      required:
+        - status
+        - business_name
+        - location
+        - category
+        - overall_sentiment
+        - overall_rating
+        - overall_score
+        - items_analysed
+        - hash_key
+        - keywords
+        - breakdown
+      properties:
+        status:
+          type: string
+          enum:
+            - NEW DATA
+            - NO NEW DATA (cached)
+          description: Indicates whether the result contains freshly analysed data or a cached result.
+        business_name:
+          type: string
+        location:
+          type: string
+        category:
+          type: string
+        overall_sentiment:
+          type: string
+          enum: [positive, negative, neutral]
+        overall_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: |
+            Aggregated star rating derived from the overall score:
+            - 5: score >= +0.50 (strongly positive)
+            - 4: score +0.15 to +0.50 (mildly positive)
+            - 3: score -0.15 to +0.15 (neutral)
+            - 2: score -0.50 to -0.15 (mildly negative)
+            - 1: score < -0.50 (strongly negative)
+        overall_score:
+          type: number
+          format: float
+          minimum: -1.0
+          maximum: 1.0
+          description: Weighted average sentiment score across all analysed items.
+        items_analysed:
+          type: integer
+          minimum: 0
+          description: Number of items included in the analysis.
+        hash_key:
+          type: string
+          description: Hash of the source data used for cache invalidation.
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Key phrases extracted from the analysed content.
+        breakdown:
+          type: array
+          description: Per-item sentiment analysis results. Always present (loaded from cache for `NO NEW DATA (cached)` responses).
+          items:
+            type: object
+            required:
+              - id
+              - source
+              - title
+              - body
+              - sentiment
+              - score
+            properties:
+              id:
+                type: string
+                description: Unique identifier for the source item.
+              source:
+                type: string
+                enum:
+                  - google_maps_reviews
+                  - newsapi
+                  - news_review
+                  - other
+                description: Origin of the data item.
+              title:
+                type: string
+                description: Title or headline of the item. Empty string for reviews without a title.
+              body:
+                type: string
+                maxLength: 200
+                description: Truncated body text of the item (max 200 characters).
+              rating:
+                type: number
+                nullable: true
+                description: Original star rating from the source (if applicable, e.g. Google Maps). Null for news articles.
+              sentiment:
+                type: string
+                enum: [positive, negative, neutral]
+              score:
+                type: number
+                format: float
+                minimum: -1.0
+                maximum: 1.0
+                description: Sentiment score for this individual item.
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message.

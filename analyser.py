@@ -46,9 +46,25 @@ def analyse(text):
     word_count = len(text.split())
     summary = summarise(text) if word_count >= 30 else text
 
-    result = sentiment_model(text)[0]
-    finbert_label = result["label"]
-    finbert_num = FINBERT_NUMERIC[finbert_label]
+    # Chunk long texts so FinBERT's 512-token limit is never exceeded.
+    # Each chunk is scored independently and the results are averaged.
+    tokens = sentiment_model.tokenizer(text, return_tensors="pt", truncation=False)["input_ids"][0]
+    chunk_size = 512
+    stride = 50  # overlap between chunks to avoid cutting mid-sentence
+    chunks = []
+    for i in range(0, len(tokens), chunk_size - stride):
+        chunk = tokens[i: i + chunk_size]
+        chunks.append(sentiment_model.tokenizer.decode(chunk, skip_special_tokens=True))
+        if i + chunk_size >= len(tokens):
+            break
+
+    chunk_scores = []
+    for chunk in chunks:
+        r = sentiment_model(chunk, truncation=True, max_length=512)[0]
+        chunk_scores.append(FINBERT_NUMERIC[r["label"]])
+
+    finbert_num = sum(chunk_scores) / len(chunk_scores)
+    finbert_label = "positive" if finbert_num > 0.15 else "negative" if finbert_num < -0.15 else "neutral"
 
     lex_score = custom_score(text)
 

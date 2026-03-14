@@ -1,0 +1,103 @@
+{
+  "business_name": "McDonalds",
+  "location": "Sydney",
+  "category": "restaurant",
+  "overall_sentiment": "positive",
+  "overall_rating": 4,
+  "overall_score": 0.218,
+  "items_analysed": 10,
+  "breakdown": [
+    {
+      "id": "news_7889358352993034753",
+      "source": "newsapi",
+      "title": "Disney Backpedals on McDonalds: Drops Surprise Announcement",
+      "body": "McDonald\u2019s has revealed a new location with Disney, cementing its legacy within the House of Mouse. McDonald\u2019s and Disney Just Did the Unthinkable There\u2019s something undeniably comforting about the fam",
+      "rating": null,
+      "sentiment": "positive",
+      "score": 0.41
+    },
+    {
+      "id": "news_3252486668841119888",
+      "source": "newsapi",
+      "title": "Disgusting video shows huge rats scampering across floor at McDonald\u2019s inside Walmart",
+      "body": "There were three of them at the McDonalds located in Dinuba, California inside a Walmart Supercenter.",
+      "rating": null,
+      "sentiment": "negative",
+      "score": -0.491
+    },
+    {
+      "id": "gmaps_5365955410255407157",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "It was good food and amazing atmosphere",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.724
+    },
+    {
+      "id": "gmaps_8921028228561100960",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Basically, I ate reasonably at a discounted price at McDonald's, but the seating area was a bit dirty, but the staff kindly gave me a napkin, which was a nice service.",
+      "rating": 4.0,
+      "sentiment": "positive",
+      "score": 0.47
+    },
+    {
+      "id": "gmaps_3950435029943564510",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Decent McDonald\u2019s for a late night bite. The orders are quickly prepared, which is always nice for fast food.",
+      "rating": 5.0,
+      "sentiment": "positive",
+      "score": 0.64
+    },
+    {
+      "id": "gmaps_6134218242760033253",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "",
+      "rating": 4.0,
+      "sentiment": "positive",
+      "score": 0.5
+    },
+    {
+      "id": "gmaps_8115315480919930646",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "0.5\ub2ec\ub7ec\uc9dc\ub9ac \uc18c\ud504\ud2b8\ucf58 \uba39\uc5c8\ub294\ub370, \ub9db\uc740 \ud55c\uad6d\uc5d0\uc11c \uba39\ub294\uac83\uacfc \ub611\uac19\uc558\uad6c\uc694. \uac00\uaca9\ub3c4 \uc800\ub834\ud574\uc11c \uc88b\uc558\uc2b5\ub2c8\ub2e4. \ub9e4\uc7a5 \ubd84\uc704\uae30\ub3c4 \uad1c\ucc2e\uc558\uc2b5\ub2c8\ub2e4.",
+      "rating": 4.0,
+      "sentiment": "positive",
+      "score": 0.2
+    },
+    {
+      "id": "gmaps_5026824251178982730",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "Service was okay, but trying to eat in the front section was a constant battle swatting away flies.",
+      "rating": 3.0,
+      "sentiment": "negative",
+      "score": -0.369
+    },
+    {
+      "id": "gmaps_5184340287293220995",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "",
+      "rating": 4.0,
+      "sentiment": "positive",
+      "score": 0.5
+    },
+    {
+      "id": "gmaps_1760695498116223265",
+      "source": "google_maps_reviews",
+      "title": "",
+      "body": "\u30c1\u30e3\u30a4\u30e9\u30c6\u3092\u6ce8\u6587\u3057\u3066\u3001\u304a\u305d\u3089\u304f\u30ab\u30d5\u30a7\u306e\u5546\u54c1\u3092\u983c\u3093\u3067\u3044\u305f\u306e\u306f\u79c1\u3060\u3051\u3060\u3063\u305f\u3060\u308d\u3046\u304b\u3089\u5e97\u54e1\u304c\u6e96\u5099\u3057\u3066\u308b\u904e\u7a0b\u3092\u305a\u3063\u3068\u307f\u3066\u307e\u3057\u305f\u3002\n\u305d\u306e\u4eba\u306f\u307e\u305a\u30ab\u30c3\u30d7\u306e\u7a2e\u985e\u3092\u4ed6\u306e\u5e97\u54e1\u306b\u78ba\u8a8d\u3057\u3066\u3086\u308b\u30fc\u304f\u96d1\u8ac7\u3057\u306a\u304c\u3089\u3001\u305d\u306e\u5f8c\u3086\u30fc\u3063\u304f\u308a\u30de\u30b7\u30f3\u3092\u6383\u9664\uff1f\u30e1\u30f3\u30c6\u30ca\u30f3\u30b9\uff1f\u3057\u306a\u304c\u3089\u3084\u3063\u3068\u4f5c\u308a\u59cb\u3081\u305f\u304b\u3068\u601d\u3063\u305f\u3089\u3001\u9593\u9055\u3048\u305f\u306e\u304b\u307e\u305f\u3084\u308a\u76f4\u3057(\u7b11)\n\u305d\u306e\u9593\u306b\u3082\u30d0\u30fc\u30ac\u30fc\u30bb\u30c3\u30c8\u3084\u30dd\u30c6\u30c8\u306a\u3069\u672c\u6765\u306a\u3089\u3082\u3063\u3068\u6642\u9593\u304c\u304b\u304b\u308b\u3067\u3042\u308d\u3046\u3001\u79c1\u3088\u308a\u3082\u8907\u96d1\u306a\u30e1\u30cb\u30e5\u30fc\u306e\u5546",
+      "rating": 1.0,
+      "sentiment": "negative",
+      "score": -0.4
+    }
+  ],
+  "status": "NEW DATA",
+  "hash_key": "54d364a45dcc6c981ba2d2fdc0d83568a0900302ffcbe783ab48399fda0c3065"
+}

@@ -1,4 +1,40 @@
+import re
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+import nltk
+nltk.download('stopwords', quiet=True)
+from nltk.corpus import stopwords
 from analyser import analyse, combined_rating, combined_label
+
+_STOP_WORDS = set(stopwords.words('english'))
+
+def extract_keywords(data: list, top_n: int = 5, days: int = 7) -> list[str]:
+    """Return the top N most frequent non-stop words from the last `days` days."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    counts = Counter()
+
+    for item in data:
+        ts = item.get("timestamp")
+        if ts:
+            try:
+                item_time = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                if item_time < cutoff:
+                    continue
+            except ValueError:
+                pass
+
+        if item.get("source") == "newsapi":
+            text = f"{item.get('title', '')} {item.get('body', '')}"
+        else:
+            text = item.get("body", "") or ""
+
+        if not text.strip():
+            continue
+
+        words = re.findall(r'\b[a-z]{3,}\b', text.lower())
+        counts.update(w for w in words if w not in _STOP_WORDS)
+
+    return [word for word, _ in counts.most_common(top_n)]
 
 def _star_to_score(rating) -> float:
     """Convert a 1-5 star rating to a -1 to +1 score."""
@@ -83,6 +119,7 @@ def analyse_business(business_name: str, location: str, category: str, data: lis
             "overall_rating":    3,
             "overall_score":     0.0,
             "items_analysed":    0,
+            "keywords":          extract_keywords(data),
             "breakdown":         [],
         }
 
@@ -96,5 +133,6 @@ def analyse_business(business_name: str, location: str, category: str, data: lis
         "overall_rating":    combined_rating(overall_score),
         "overall_score":     round(overall_score, 3),
         "items_analysed":    len(results),
+        "keywords":          extract_keywords(data),
         "breakdown":         results,
     }
