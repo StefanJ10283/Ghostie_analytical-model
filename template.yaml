@@ -13,6 +13,7 @@ Resources:
       Environment:
         Variables:
           NLTK_DATA: /var/task/nltk_data
+          LEARNED_LEXICON_PATH: /tmp/learned_lexicon.json
       Events:
         ApiCatchAll:
           Type: Api

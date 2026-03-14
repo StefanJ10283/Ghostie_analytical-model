@@ -10,7 +10,10 @@ except LookupError:
 from nltk.corpus import stopwords
 from analyser import analyse, combined_rating, combined_label
 
-_LEARNED_LEXICON_PATH = os.path.join(os.path.dirname(__file__), "learned_lexicon.json")
+_LEARNED_LEXICON_PATH = os.environ.get(
+    "LEARNED_LEXICON_PATH",
+    os.path.join(os.path.dirname(__file__), "learned_lexicon.json")
+)
 
 def _update_learned_lexicon(keywords: list[str], data: list) -> None:
     """Infer polarity of each keyword from all collected items.
