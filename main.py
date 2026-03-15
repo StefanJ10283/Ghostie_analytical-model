@@ -159,7 +159,6 @@ def leaderboard():
     for rank, item in enumerate(top, start=1):
         score = item.get("overall_score", 0)
         results.append({
-            "rank":              rank,
             "business_name":     item.get("business_name"),
             "location":          item.get("location"),
             "category":          item.get("category"),
@@ -170,7 +169,6 @@ def leaderboard():
         })
 
     return {"leaderboard": results}
-
 
 @app.get("/history")
 def history(
