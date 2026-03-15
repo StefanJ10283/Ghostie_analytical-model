@@ -141,11 +141,21 @@ def history(
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"DynamoDB error: {e.response['Error']['Message']}")
 
-    items = [floats_to_ints_and_floats(item) for item in response.get("Items", [])]
-    if not items:
+    if not response.get("Items"):
         raise HTTPException(status_code=404, detail=f"No history found for '{business_name}' in '{location}'.")
 
-    return {"business_key": business_key, "count": len(items), "results": items}
+    results = []
+    for item in response["Items"]:
+        item = floats_to_ints_and_floats(item)
+        score = item.get("overall_score", 0)
+        results.append({
+            "date_time":         item.get("date_time"),
+            "overall_sentiment": item.get("overall_sentiment"),
+            "overall_rating":    item.get("overall_rating"),
+            "overall_score":     round((score + 1) / 2 * 100, 1),
+        })
+
+    return {"business_key": business_key, "count": len(results), "results": results}
 
 from mangum import Mangum
 handler = Mangum(app)
