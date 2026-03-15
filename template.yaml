@@ -14,6 +14,17 @@ Resources:
         Variables:
           NLTK_DATA: /var/task/nltk_data
           LEARNED_LEXICON_PATH: /tmp/learned_lexicon.json
+          DYNAMODB_REGION: ap-southeast-2
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource:
+                - arn:aws:dynamodb:ap-southeast-2:146558977325:table/analytical_results
       Events:
         ApiCatchAll:
           Type: Api

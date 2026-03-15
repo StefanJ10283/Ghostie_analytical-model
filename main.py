@@ -1,9 +1,44 @@
 import httpx
 import uvicorn
 import os
+from decimal import Decimal
+from datetime import datetime, timezone
+import boto3
+from botocore.exceptions import ClientError
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from data_processor import analyse_business
+
+# ── DynamoDB setup ──────────────────────────────────────────────────────────────
+dynamodb = boto3.resource(
+    "dynamodb",
+    region_name=os.getenv("DYNAMODB_REGION", "ap-southeast-2"),
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
+)
+analytical_results_table = dynamodb.Table("analytical_results")
+
+
+def floats_to_decimals(obj):
+    if isinstance(obj, float):
+        return Decimal(str(obj))
+    if isinstance(obj, dict):
+        return {k: floats_to_decimals(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [floats_to_decimals(i) for i in obj]
+    return obj
+
+
+def save_to_dynamodb(business_key: str, result: dict):
+    try:
+        analytical_results_table.put_item(Item=floats_to_decimals({
+            "business_key": business_key,
+            "date_time":    datetime.now(timezone.utc).isoformat(),
+            **result,
+        }))
+    except ClientError as e:
+        print(f"DynamoDB write failed: {e.response['Error']['Message']}")
 
 DATA_RETRIEVAL_URL = os.environ.get("DATA_RETRIEVAL_URL", "https://8dwmeuc3b1.execute-api.ap-southeast-2.amazonaws.com/Prod")
 
@@ -75,6 +110,9 @@ def retrieve(
         category=category,
         data=retrieval.get("data", []),
     )
+
+    business_key = f"{business_name.lower().strip()}_{location.lower().strip()}_{category.lower().strip()}"
+    save_to_dynamodb(business_key, result)
 
     return JSONResponse(content=result)
 
