@@ -72,6 +72,17 @@ def root():
 def health():
     return {"status": "healthy"}
 
+@app.get("/analyse")
+def analyse_text(text: str = Query(..., description="Text to analyse")):
+    """Analyse a raw piece of text and return its sentiment score."""
+    from analyser import analyse
+    score, label, _, _, _, _ = analyse(text)
+    return {
+        "text":      text,
+        "sentiment": label,
+        "score":     round((score + 1) / 2 * 100, 1),
+    }
+
 @app.get("/sentiment")
 def retrieve(
     business_name: str = Query(...),
