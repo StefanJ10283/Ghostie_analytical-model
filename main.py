@@ -1,6 +1,7 @@
 import httpx
 import uvicorn
 import os
+import logging
 from decimal import Decimal
 from datetime import datetime, timezone
 import boto3
@@ -8,6 +9,9 @@ from botocore.exceptions import ClientError
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from data_processor import analyse_business
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
+logger = logging.getLogger("analytical_model")
 
 # ── DynamoDB setup ──────────────────────────────────────────────────────────────
 dynamodb = boto3.resource(
@@ -138,6 +142,11 @@ def retrieve(
     for item in result.get("breakdown", []):
         item["score"] = round((item["score"] + 1) / 2 * 100, 1)
 
+    logger.info("sentiment_analysed business=%s location=%s category=%s items=%d score=%.1f sentiment=%s cached=%s",
+                business_name, location, category,
+                result["items_analysed"], result["overall_score"],
+                result["overall_sentiment"], is_cached)
+
     save_to_dynamodb(business_key, result)
 
     return JSONResponse(content=result)
@@ -185,6 +194,7 @@ def leaderboard():
             "as_of":             item.get("date_time"),
         })
 
+    logger.info("leaderboard_queried total_businesses=%d", len(latest))
     return {"leaderboard": results}
 
 @app.get("/history")
@@ -203,6 +213,8 @@ def history(
         )
     except ClientError as e:
         raise HTTPException(status_code=500, detail=f"DynamoDB error: {e.response['Error']['Message']}")
+
+    logger.info("history_queried business_key=%s", business_key)
 
     if not response.get("Items"):
         raise HTTPException(status_code=404, detail=f"No history found for '{business_name}' in '{location}'.")

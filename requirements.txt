@@ -6,3 +6,5 @@ fastapi
 uvicorn
 mangum
 httpx
+pytest
+pytest-html
