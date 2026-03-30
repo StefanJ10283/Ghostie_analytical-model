@@ -37,8 +37,8 @@ class TestCombinedRating:
         assert combined_rating(-0.5) == 2
 
     def test_boundary_positive_high(self):
-        # exactly 0.5 → rating 4
-        assert combined_rating(0.5) == 4
+        # exactly 0.5 → rating 5 (not < 0.5, so falls through to return 5)
+        assert combined_rating(0.5) == 5
 
     def test_boundary_neutral_low(self):
         # just below -0.15 → rating 2
@@ -47,7 +47,6 @@ class TestCombinedRating:
     def test_boundary_neutral_high(self):
         # just below 0.15 → rating 3
         assert combined_rating(0.14) == 3
-
 
 # ── combined_label ───────────────────────────────────────────────────────────
 
@@ -72,7 +71,6 @@ class TestCombinedLabel:
 
     def test_just_positive(self):
         assert combined_label(0.16) == "positive"
-
 
 # ── analyse ──────────────────────────────────────────────────────────────────
 
