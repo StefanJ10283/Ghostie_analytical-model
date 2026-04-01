@@ -1,0 +1,14 @@
+tests/
+coverage-report/
+test-report.html
+test-report.pdf
+.coveragerc
+pytest.ini
+ruff.toml
+train.py
+Dockerfile
+.github/
+.gitignore
+.samignore
+*.pyc
+__pycache__/

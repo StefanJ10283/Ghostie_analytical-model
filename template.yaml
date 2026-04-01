@@ -6,7 +6,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
-      Handler: main.handler # Points to the Mangum handler in main.py
+      Handler: main.handler
       Runtime: python3.12
       Timeout: 30
       MemorySize: 512
