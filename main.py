@@ -9,7 +9,6 @@ from botocore.exceptions import ClientError
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
 from mangum import Mangum
-from data_processor import analyse_business
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("analytical_model")
@@ -129,6 +128,7 @@ def retrieve(
         except httpx.ConnectError:
             raise HTTPException(status_code=503, detail="Could not connect to data retrieval server.")
 
+    from data_processor import analyse_business
     result = analyse_business(
         business_name=business_name,
         location=location,
