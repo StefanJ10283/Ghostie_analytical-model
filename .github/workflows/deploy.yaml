@@ -94,6 +94,27 @@ jobs:
 
       - run: sam deploy --stack-name Ghostie-analytical-model --resolve-s3 --capabilities CAPABILITY_IAM --no-fail-on-empty-changeset --image-repository 146558977325.dkr.ecr.ap-southeast-2.amazonaws.com/ghostie-analytical-model
 
+      - name: Fix API Gateway permissions and redeploy
+        run: |
+          FUNCTION=$(aws cloudformation describe-stack-resource \
+            --stack-name Ghostie-analytical-model \
+            --logical-resource-id MyFastApiFunction \
+            --query 'StackResourceDetail.PhysicalResourceId' --output text)
+          API_ID=$(aws cloudformation describe-stack-resource \
+            --stack-name Ghostie-analytical-model \
+            --logical-resource-id ServerlessRestApi \
+            --query 'StackResourceDetail.PhysicalResourceId' --output text)
+          echo "Function: $FUNCTION, API: $API_ID"
+          aws lambda remove-permission --function-name "$FUNCTION" --statement-id apigateway-prod-invoke --region ap-southeast-2 2>/dev/null || true
+          aws lambda add-permission \
+            --function-name "$FUNCTION" \
+            --statement-id apigateway-prod-invoke \
+            --action lambda:InvokeFunction \
+            --principal apigateway.amazonaws.com \
+            --source-arn "arn:aws:execute-api:ap-southeast-2:146558977325:${API_ID}/*/*" \
+            --region ap-southeast-2
+          aws apigateway create-deployment --rest-api-id "$API_ID" --stage-name Prod --region ap-southeast-2
+
       - name: Invoke Lambda and show logs
         run: |
           FUNCTION=$(aws cloudformation describe-stack-resource \
