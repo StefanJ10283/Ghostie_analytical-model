@@ -76,13 +76,15 @@ jobs:
 
       - uses: aws-actions/setup-sam@v2
 
-      - name: Delete stack if in ROLLBACK_COMPLETE
+      - name: Delete stack if in ROLLBACK_COMPLETE or UPDATE_ROLLBACK_COMPLETE
         run: |
           STATUS=$(aws cloudformation describe-stacks --stack-name Ghostie-analytical-model --query "Stacks[0].StackStatus" --output text 2>/dev/null || echo "DOES_NOT_EXIST")
-          if [ "$STATUS" = "ROLLBACK_COMPLETE" ]; then
-            echo "Stack in ROLLBACK_COMPLETE — deleting..."
+          echo "Stack status: $STATUS"
+          if [ "$STATUS" = "ROLLBACK_COMPLETE" ] || [ "$STATUS" = "UPDATE_ROLLBACK_COMPLETE" ]; then
+            echo "Stack in $STATUS — deleting and recreating..."
             aws cloudformation delete-stack --stack-name Ghostie-analytical-model
             aws cloudformation wait stack-delete-complete --stack-name Ghostie-analytical-model
+            echo "Stack deleted. SAM will recreate it."
           fi
 
       - name: Log in to Amazon ECR
