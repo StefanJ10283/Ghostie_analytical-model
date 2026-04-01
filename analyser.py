@@ -1,6 +1,5 @@
 import os
 import re
-import joblib
 from custom_analyser import custom_score
 
 _MODEL_PATH = os.path.join(os.path.dirname(__file__), "sentiment_model.pkl")
@@ -10,6 +9,7 @@ def _get_model():
     global _model
     if _model is None:
         if os.path.exists(_MODEL_PATH):
+            import joblib
             _model = joblib.load(_MODEL_PATH)
             print("Loaded trained sentiment model.")
         else:
