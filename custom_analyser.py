@@ -66,7 +66,7 @@ NEGATIVE_WORDS = {
     "misleading": 1.0, "illusory": 1.0, "deceptive": 1.0, "accused": 0.8,
     "antitrust": 0.9, "accc": 0.7, "regulator": 0.6, "probe": 0.7,
     "outage": 0.9, "outages": 0.9, "incident": 0.6, "incidents": 0.6,
-    "settle": 0.6, "settlement": 0.7, "penalty": 0.9, "sue": 0.9, "sued": 0.9,
+    "settle": 0.6, "settlement": 0.7, "sue": 0.9, "sued": 0.9,
 }
 
 # --- Learned Lexicon (auto-updated from real data) ---

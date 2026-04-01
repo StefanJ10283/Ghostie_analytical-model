@@ -8,6 +8,7 @@ import boto3
 from botocore.exceptions import ClientError
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import JSONResponse
+from mangum import Mangum
 from data_processor import analyse_business
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
@@ -231,7 +232,6 @@ def history(
 
     return {"business_key": business_key, "count": len(results), "results": results}
 
-from mangum import Mangum
 handler = Mangum(app)
 
 if __name__ == "__main__":
