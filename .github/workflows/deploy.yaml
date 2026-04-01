@@ -99,7 +99,7 @@ jobs:
             --logical-resource-id MyFastApiFunction \
             --query 'StackResourceDetail.PhysicalResourceId' --output text)
           echo "Function: $FUNCTION"
-          echo '{"httpMethod":"GET","path":"/health","headers":{},"queryStringParameters":null,"body":null,"isBase64Encoded":false}' > /tmp/payload.json
+          echo '{"httpMethod":"GET","path":"/health","headers":{"host":"localhost"},"queryStringParameters":null,"body":null,"isBase64Encoded":false,"requestContext":{"resourcePath":"/health","httpMethod":"GET","path":"/Prod/health"}}' > /tmp/payload.json
           aws lambda invoke --function-name "$FUNCTION" \
             --payload fileb:///tmp/payload.json \
             --log-type Tail --output text --query 'LogResult' /tmp/response.json | base64 -d
